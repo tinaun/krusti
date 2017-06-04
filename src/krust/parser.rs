@@ -3,11 +3,17 @@ use std::error::Error;
 use std::fmt;
 use std::f64;
 
-use nom::{double_s, digit, space};
+use nom::{IResult, double_s, digit, space};
 use super::{Item, Ty, Primitive, Integer, Float};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ParseError {
+pub struct ParseError {
+    span: usize,
+    kind: ParseErrorKind,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+enum ParseErrorKind {
     Ty(Ty, Ty),
     UnknownChar,
 }
@@ -15,12 +21,23 @@ pub enum ParseError {
 type ParseResult = Result<Item, ParseError>;
 
 impl ParseError {
+    fn new(span: usize, kind: ParseErrorKind) -> Self {
+        ParseError {
+            span,
+            kind
+        }
+    }
+
     fn __description(&self) -> String {
-        match *self {
-            ParseError::Ty(a, b) => format!("invalid type: expected `{}`, found `{}`", a, b),
+        match self.kind {
+            ParseErrorKind::Ty(a, b) => format!("invalid type: expected `{}`, found `{}`", a, b),
             _        => "unknown input character".to_string(),
         }
     }
+
+    pub fn span(&self) -> usize {
+        self.span
+    } 
 }
 
 impl fmt::Display for ParseError {
@@ -36,9 +53,18 @@ impl Error for ParseError {
 }
 
 pub fn parse_item(input: &str) -> Result<Item, ParseError> {
-    match parse_vector(input).to_result() {
-        Ok(e) => e,
-        Err(_) => Err(ParseError::UnknownChar)
+    let res = __parse_item(input.trim());
+    println!("{:?}", res);
+    
+    match res {
+        IResult::Done(i, e) => {
+            if i.len() > 0 {
+                Err(ParseError::new(input.len() - i.len(), ParseErrorKind::UnknownChar))
+            } else {
+                e
+            }
+        },
+        _ => Err(ParseError::new(0, ParseErrorKind::UnknownChar))
     }
 }
 
@@ -85,17 +111,56 @@ named!(parse_vector<&str, ParseResult>, map!(many1!(do_parse!(
     opt!(space) >>
     prim: parse_primitive >>
     (prim)
-)), |v: Vec<Primitive>| {
+)), |v: Vec<Primitive> | {
     if v.len() == 1 {
         Ok(Item::Unit(v[0].clone()))
     } else {
         let ty = v[0].ty();
 
         if let Some(bad_ty) = v.iter().find(|&p| p.ty() != ty) {
-            Err(ParseError::Ty(ty, bad_ty.ty()))
+            Err(ParseError::new(0, ParseErrorKind::Ty(ty, bad_ty.ty())))
         } else {
             Ok(Item::Vector(ty, v.clone()))
         }
     }
 }
+));
+
+named!(parse_list<&str, ParseResult>, map!(do_parse!(
+    tag_s!("(") >>
+    list: many0!(alt!(
+        do_parse!(
+            opt!(space) >>
+            item: opt!(parse_vector) >>
+            tag_s!(";") >>
+            (item)
+        ) | 
+        do_parse!(
+            opt!(space) >>
+            item: parse_vector >>
+            (Some(item))
+        )
+    )) >>
+    tag_s!(")") >>
+    (list) 
+), |v: Vec<Option<ParseResult>>| {
+    if v.len() == 0 {
+        return Ok(Item::Nil);
+    }
+    //println!("{:?}", v);
+    let mut res: Vec<Item> = Vec::new();
+    for item in v {
+        match item {
+            None    => res.push(Item::Nil),
+            Some(Ok(i)) => res.push(i),
+            Some(e) => return e,
+        }
+    }
+
+    Ok(Item::List(res))
+}));
+
+named!(__parse_item<&str, ParseResult>, alt!(
+    parse_list |
+    parse_vector            
 ));

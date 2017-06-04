@@ -5,3 +5,6 @@ authors = ["tinaun <tinagma@gmail.com>"]
 
 [dependencies]
 nom = "3.0"
+
+[dev-dependencies]
+rustyline = "1.0"
