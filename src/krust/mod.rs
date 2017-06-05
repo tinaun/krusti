@@ -3,6 +3,7 @@ use std::fmt;
 use std::ops::Deref;
 
 mod parser;
+pub mod expr;
 
 pub use self::parser::{ParseError, parse_item};
 
