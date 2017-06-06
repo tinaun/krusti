@@ -1,8 +1,9 @@
 //! an interpreter for a k5-k6 ish language
 //! heavily inspired by JohnEarnest's oK
+#![recursion_limit = "256"]
 
 #[macro_use]
-extern crate nom;
+extern crate pest;
 
 pub mod krust;
 
