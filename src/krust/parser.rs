@@ -8,7 +8,7 @@ use pest::prelude::*;
 
 impl_rdp! {
     grammar! {
-        block   = _{ (block_expr ~ [";"] | void )* ~ block_expr ~ [";"]? }
+        block   = _{ (block_expr ~ [";"] | void )* ~ block_expr? }
         list    = { ["("] ~ block? ~ [")"] | int ~ int+ }
             
         noun = { list | atom | ident }
@@ -22,13 +22,13 @@ impl_rdp! {
         //atoms
         symbol  = @{ ["`"] ~ (sym_start ~ sym_continue* )* }
         char    = @{ ["\""] ~ (!["\""] ~ any) ~ ["\""] } 
-        int     = @{ null | (["-"] | ["+"])? ~ intseq }
+        int     = @{ null | (["-"] | ["+"])? ~ intseq ~ !(["b"] | ["x"]) }
         float   = @{ nan | inf | (["-"] | ["+"])? ~ intseq? ~ ["."] ~ ['0'..'9']+ }
         boollist    = @{ ['0'..'1']+ ~ ["b"] } 
         hexlist     = @{ ["0x"] ~ (hex ~ hex)+ }
         string      = @{ ["\""] ~ (!["\""] ~ any)* ~ ["\""] }
 
-        atom    = { symbol | char | int | float | boollist | hexlist | string }
+        atom    = { symbol | char | float | int | boollist | hexlist | string }
         
         ident   = @{ alpha ~ alphanum* }
 
