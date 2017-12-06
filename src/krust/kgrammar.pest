@@ -1,0 +1,67 @@
+name = @{ ('a'..'z' | 'A'..'Z') ~ ('a'..'z' | 'A'..'Z' | '0'..'9')* }
+
+sep = { ";" | "\n" }
+block = _{ expr? ~ (sep ~ expr?)* }
+
+list = { "(" ~ block ~ ")" }
+
+arglist = { "[" ~ name ~ (sep ~ name)* ~ "]" }
+function = { "{" ~ arglist? ~ block ~ "}" }
+
+expr = _{ assign | train }
+assign = { name ~ ":" ~ train }
+
+train = { (name | noun | verb | call )+ }
+noun = { vector | string | symbol | list | dict }
+
+vector = { (num)+ }
+num = @{ "0N" | ('0'..'9')+ }
+
+symbol = @{ ("`" ~ name?)+ }
+
+string = { "\"" ~ (raw_string | escape)* ~ "\"" }
+raw_string = _{ (!("\\" | "\"") ~ any)+ }
+predefined = _{ "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
+escape     = _{ "\\" ~ predefined }
+
+
+verb = { function | adverb | monadic | dyadic }
+monadic = { dyadic ~ ":" }
+dyadic = _{ plus | minus | times | divide | map | min | max | less | more | 
+            equal | match_ | enlist | except | reshape | drop | pad | find | at | dot }
+
+adverb = _{ eachprior | eachleft | eachright | each | fold | scan }
+
+plus = { "+" }
+minus = { "-" }
+times = { "*" }
+divide = { "%" }
+map = { "!" }
+min = { "&" }
+max = { "|" }
+less = { "<" }
+more = { ">" }
+equal = { "=" }
+match_ = { "~" }
+enlist = { "," }
+except = { "^" }
+reshape = { "#" }
+drop = { "_" }
+pad = { "$" }
+find = { "?" }
+at = { "@" }
+dot = { "." }
+
+each = { "'" }
+eachprior = { "':" }
+eachright = { "/:" }
+eachleft = { "\\:" }
+fold = { "/" }
+scan = { "\\" }
+
+dict = { "[" ~ ((assign ~ sep)* ~ assign)? ~ "]" }
+call = { "[" ~ block ~ "]" }
+
+outer_block = { block }
+
+whitespace = _{ " " | "\t" | "\r" }

@@ -3,30 +3,31 @@
 #![recursion_limit = "256"]
 
 #[macro_use]
+extern crate pest_derive;
 extern crate pest;
 
 pub mod krust;
 
 use std::collections::BTreeMap;
-
-use krust::Item;
-use krust::expr::{Expr, Name};
+use krust::{Name, Expr};
 
 #[derive(Debug, PartialEq)]
-pub struct KrustI {
-    names: BTreeMap<Name, Item>
+pub struct Interpreter {
+    names: BTreeMap<Name, Expr>
 }
 
 /// k interpreter
-impl KrustI {
+impl Interpreter {
     pub fn new() -> Self {
-        KrustI {
+        Interpreter {
             names: BTreeMap::new(),
         }
     }
 
     pub fn evaluate(&mut self, input: &str) -> EvalResult {
-        unimplemented!()
+        let _ = krust::parse_expr(input);
+
+        Ok(())
     }
 
     pub fn names(&self) -> Vec<&str> {

@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["tinaun <tinagma@gmail.com>"]
 
 [dependencies]
-pest = "0.4"
+pest = "1.0.0-beta"
+pest_derive =  "1.0.0-beta"
 
 [dev-dependencies]
 rustyline = "1.0"

@@ -7,22 +7,15 @@ fn main() {
 
     loop {
         let readline = rl.readline(">> ");
+        let mut k_sess = krusti::Interpreter::new();
 
         match readline {
             Ok(ref line) if line != "\\q" => {
                 rl.add_history_entry(&line);
 
                 if line.len() > 0 {
-                    let i = krusti::krust::parse_item(&line);
+                    let _ = k_sess.evaluate(&line);
 
-                    match i {
-                        Ok(item) => println!(" {}", item),
-                        Err(e)   => {
-                            // TODO: better spans
-                            // println!("    {: >pad$}", '^', pad = e.span());
-                            println!("Error: {}", e);
-                        },
-                    }
                 }
             },
             _ => break,
